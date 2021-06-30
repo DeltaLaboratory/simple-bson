@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "simple-bson"
+version = "0.0.1"
+description = "Python Bson Compatible Library"
+authors = [
+    "DeltaLaboratory <delta@deltalab.dev>"
+]
+packages = [
+    { include = "simple-bson" },
+]
+
+readme = "README.rst"
+repository = "https://github.com/DeltaLaboratory/simple-bson"
+homepage = "https://github.com/DeltaLaboratory/simple-bson"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+
+[tool.poetry.dev-dependencies]
+pytest = "^6.2.4"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
