@@ -6,7 +6,7 @@ authors = [
     "DeltaLaboratory <delta@deltalab.dev>"
 ]
 packages = [
-    { include = "simple-bson" },
+    { include = "simple_bson" },
 ]
 
 readme = "README.rst"
@@ -14,10 +14,11 @@ repository = "https://github.com/DeltaLaboratory/simple-bson"
 homepage = "https://github.com/DeltaLaboratory/simple-bson"
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.7"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.4"
+pymongo = "^3.11.4"
 
 
 [build-system]
