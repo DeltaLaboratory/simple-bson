@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "simple-bson"
-version = "0.0.1"
+version = "0.0.2"
 description = "Python Bson Compatible Library"
 authors = [
     "DeltaLaboratory <delta@deltalab.dev>"

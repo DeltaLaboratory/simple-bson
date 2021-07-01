@@ -1,3 +1,5 @@
+__all__ = ("root_encoder", )
+
 import struct
 
 from .etc import dummy_function, TypeSignature, EncodeError
@@ -17,7 +19,7 @@ def register(input_type):
     return decorator
 
 
-def encode_element_name(name: (str, bytes)) -> bytes:
+def encode_element_name(name: str) -> bytes:
     if isinstance(name, str):
         name = name.encode("utf-8")
     if b"\x00" in name:
@@ -25,7 +27,7 @@ def encode_element_name(name: (str, bytes)) -> bytes:
     return name + b"\x00"
 
 
-def encode_element(name: (str, bytes), element) -> bytes:
+def encode_element(name: str, element) -> bytes:
     encoder = encoders.get(type(element))
     if encoder is None:
         raise EncodeError(f"Cannot find encoder : {type(element)}")
@@ -33,32 +35,28 @@ def encode_element(name: (str, bytes), element) -> bytes:
 
 
 def root_encoder(dictionary):
-    buffer = bytearray()
-    for key in dictionary.keys():
-        if type(key) not in (bytes, str):
-            key = str(key)
-        buffer.extend(encode_element(key, dictionary[key]))
+    buffer = b"".join([encode_element(key, dictionary[key]) for key in dictionary.keys()])
     return struct.pack(f"<i{len(buffer)}sb", len(buffer) + 5, buffer, 0)
 
 
 @register((str,))
-def encode_string(name: (str, bytes), value: str) -> bytes:
+def encode_string(name: str, value: str) -> bytes:
     value = value.encode("utf-8")
     return TypeSignature.string + encode_element_name(name) + struct.pack(f"<i{len(value)}sb", len(value) + 1, value, 0)
 
 
 @register((bool,))
-def encode_bool(name: (str, bytes), value: bool) -> bytes:
+def encode_bool(name: str, value: bool) -> bytes:
     return TypeSignature.bool + encode_element_name(name) + struct.pack("<b", value)
 
 
 @register((None,))
-def encode_null(name: (str, bytes), value: None) -> bytes:
+def encode_null(name: str, value: None) -> bytes:
     return TypeSignature.null + encode_element_name(name)
 
 
 @register((int,))
-def encode_int(name: (str, bytes), value: int) -> bytes:
+def encode_int(name: str, value: int) -> bytes:
     if -2147483648 <= value <= 2147483647:
         return TypeSignature.int32 + encode_element_name(name) + struct.pack("<i", value)
     elif -9223372036854775808 <= value <= 9223372036854775807:
@@ -70,30 +68,28 @@ def encode_int(name: (str, bytes), value: int) -> bytes:
 
 
 @register((float,))
-def encode_double(name: (str, bytes), value: float) -> bytes:
+def encode_double(name: str, value: float) -> bytes:
     return TypeSignature.double + encode_element_name(name) + struct.pack("<d", value)
 
 
 @register((bytes,))
-def encode_binary(name: (str, bytes), value: bytes) -> bytes:
+def encode_binary(name: str, value: bytes) -> bytes:
     return TypeSignature.binary + encode_element_name(name) + struct.pack("<ib", len(value), 0) + value
 
 
 @register((list, tuple))
-def encode_list(name: (str, bytes), value: (set, list)) -> bytes:
-    buffer = bytearray()
-    for index, element in enumerate(value):
-        buffer.extend(encode_element(str(index), element))
-    return TypeSignature.array + encode_element_name(name) + struct.pack(f"<i{len(buffer)}sb", len(buffer),
+def encode_list(name: str, value: (set, list)) -> bytes:
+    buffer = b"".join([encode_element(str(index), element) for index, element in enumerate(value)])
+    return TypeSignature.array + encode_element_name(name) + struct.pack(f"<i{len(buffer)}sb", len(buffer) + 5,
                                                                          buffer, 0)
 
 
 @register((dict,))
-def encode_dict(name: (str, bytes), value: dict) -> bytes:
+def encode_dict(name: str, value: dict) -> bytes:
     buffer = bytearray()
     for key in value.keys():
         if type(key) not in (bytes, str):
             key = str(key)
         buffer.extend(encode_element(key, value[key]))
-    return TypeSignature.document + encode_element_name(name) + struct.pack(f"<i{len(buffer)}sb", len(buffer),
+    return TypeSignature.document + encode_element_name(name) + struct.pack(f"<i{len(buffer)}sb", len(buffer) + 5,
                                                                             buffer, 0)
