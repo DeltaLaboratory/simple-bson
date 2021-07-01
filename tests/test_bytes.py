@@ -1,4 +1,4 @@
-import random
+import os
 
 import pytest
 
@@ -6,7 +6,7 @@ import simple_bson
 import bson
 
 DATA = {
-    "bytes": [random.randbytes(16), 100000]
+    "bytes": [os.urandom(16), 100000]
 }
 
 
