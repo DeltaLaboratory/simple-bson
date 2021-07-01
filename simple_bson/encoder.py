@@ -59,11 +59,11 @@ def encode_null(name: (str, bytes), value: None) -> bytes:
 
 @register((int,))
 def encode_int(name: (str, bytes), value: int) -> bytes:
-    if -2147483648 <= value or value >= 2147483647:
+    if -2147483648 <= value <= 2147483647:
         return TypeSignature.int32 + encode_element_name(name) + struct.pack("<i", value)
-    elif -9223372036854775808 <= value or value >= 9223372036854775807:
+    elif -9223372036854775808 <= value <= 9223372036854775807:
         return TypeSignature.int64 + encode_element_name(name) + struct.pack("<q", value)
-    elif 0 <= value or value >= 18446744073709551615:
+    elif 0 <= value <= 18446744073709551615:
         return TypeSignature.uint64 + encode_element_name(name) + struct.pack("<Q", value)
     else:
         raise EncodeError("bson only support -9223372036854775808 ~ 18446744073709551615 (int32, int64, uint64)")
