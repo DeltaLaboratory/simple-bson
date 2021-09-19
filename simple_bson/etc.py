@@ -1,6 +1,3 @@
-import warnings
-
-
 class TypeSignature:
     double = b"\x01"
     string = b"\x02"
@@ -20,10 +17,6 @@ class EncodeError(Exception):
 
 class DecodeError(Exception):
     pass
-
-
-def dummy_function(text: str):
-    warnings.warn(f"call {text} directly will ignored.", Warning)
 
 
 def get_data_and_view(data):

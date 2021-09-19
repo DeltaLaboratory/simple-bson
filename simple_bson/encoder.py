@@ -1,20 +1,23 @@
-__all__ = ("root_encoder", )
-
 import struct
+import typing
+import collections.abc
 
-from .etc import dummy_function, TypeSignature, EncodeError
+from .etc import TypeSignature, EncodeError
 
 encoders = {}
 
 
-def register(input_type):
+def register(input_type: collections.abc.Sequence) -> typing.Callable:
+    """
+    simple decorator for type dispatch
+    """
+
     def decorator(function):
         if input_type in encoders:
-            dummy_function(function.__name__)
-            return
+            return function
         for types in input_type:
             encoders[types] = function
-        return
+        return function
 
     return decorator
 
@@ -23,19 +26,19 @@ def encode_element_name(name: str) -> bytes:
     if isinstance(name, str):
         name = name.encode("utf-8")
     if b"\x00" in name:
-        raise EncodeError("NUL cannot in name")
+        raise EncodeError("null contained in name")
     return name + b"\x00"
 
 
 def encode_element(name: str, element) -> bytes:
     encoder = encoders.get(type(element))
     if encoder is None:
-        raise EncodeError(f"Cannot find encoder : {type(element)}")
+        raise EncodeError(f"No encoder for : {type(element)}")
     return encoder(name, element)
 
 
-def root_encoder(dictionary):
-    buffer = b"".join([encode_element(key, dictionary[key]) for key in dictionary.keys()])
+def encode_document(document):
+    buffer = b"".join([encode_element(key, document[key]) for key in document.keys()])
     return struct.pack(f"<i{len(buffer)}sb", len(buffer) + 5, buffer, 0)
 
 
@@ -57,14 +60,14 @@ def encode_null(name: str, value: None) -> bytes:
 
 @register((int,))
 def encode_int(name: str, value: int) -> bytes:
-    if -2147483648 <= value <= 2147483647:
+    if -1 << 31 <= value <= 1 << 31:
         return TypeSignature.int32 + encode_element_name(name) + struct.pack("<i", value)
-    elif -9223372036854775808 <= value <= 9223372036854775807:
+    elif -1 << 63 <= value <= 1 << 63:
         return TypeSignature.int64 + encode_element_name(name) + struct.pack("<q", value)
-    elif 0 <= value <= 18446744073709551615:
+    elif 0 <= value <= (1 << 64) - 1:
         return TypeSignature.uint64 + encode_element_name(name) + struct.pack("<Q", value)
     else:
-        raise EncodeError("bson only support -9223372036854775808 ~ 18446744073709551615 (int32, int64, uint64)")
+        raise EncodeError("bson only support (-1 << 63) ~ (1 << 64) - 1 (int32, int64, uint64)")
 
 
 @register((float,))

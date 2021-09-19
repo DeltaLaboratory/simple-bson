@@ -10,4 +10,4 @@ DATA = {
 
 
 def test_int():
-    assert simple_bson.dump(DATA) == bson.BSON.encode(DATA)
+    assert simple_bson.dumps(DATA) == bson.BSON.encode(DATA)

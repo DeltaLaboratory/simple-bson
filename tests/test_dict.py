@@ -4,15 +4,15 @@ import simple_bson
 import bson
 
 DATA = {
-    "string": "호에엥",
-    "int32": 0000,
+    "string": "Lorem Ipsum",
+    "int32": 42,
     "int64": 9223372036854775807,
-    "bytes": "호에엥".encode("utf-8"),
+    "bytes": "Lorem Ipsum".encode("utf-8"),
     "array": [],
     "bool": [True, False],
-    "float": 0.009223372036854775807
+    "float": 0.42
 }
 
 
 def test_main():
-    assert simple_bson.dump(DATA) == bson.BSON.encode(DATA)
+    assert simple_bson.dumps(DATA) == bson.BSON.encode(DATA)

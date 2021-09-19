@@ -1,5 +1,11 @@
-from . import encoder
+import typing
+
+from . import encoder, decoder
 
 
-def dump(dictionary):
-    return encoder.root_encoder(dictionary)
+def dumps(document: typing.Dict) -> bytes:
+    return encoder.encode_document(document)
+
+
+def loads(document: bytes) -> typing.Dict:
+    return decoder.decode_root_document(document)

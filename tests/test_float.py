@@ -11,4 +11,4 @@ DATA = {
 
 
 def test_float():
-    assert simple_bson.dump(DATA) == bson.BSON.encode(DATA)
+    assert simple_bson.dumps(DATA) == bson.BSON.encode(DATA)
