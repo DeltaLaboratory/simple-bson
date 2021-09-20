@@ -35,8 +35,7 @@ def read_length(stream: io.BytesIO):
     return struct.unpack("<i", stream.read(4))[0]
 
 
-def decode_element(stream: io.BytesIO):
-    element_type = struct.unpack("<b", stream.read(1))[0]
+def decode_element(element_type: int, stream: io.BytesIO):
     try:
         return decoders[element_type](stream)
     except LookupError:
@@ -50,7 +49,8 @@ def decode_root_document(document: bytes):
     read_length(document)
     result = {}
     while document.getbuffer().nbytes != 0:
-        result[read_name(document)] = decode_element(document)
+        element_type = struct.unpack("<b", document.read(1))[0]
+        result[read_name(document)] = decode_element(element_type, document)
     return result
 
 
@@ -59,7 +59,8 @@ def decode_document(stream: io.BytesIO) -> dict:
     document = io.BytesIO(stream.read(read_length(stream)))
     result = {}
     while document.getbuffer().nbytes != 0:
-        result[read_name(document)] = decode_element(document)
+        element_type = struct.unpack("<b", document.read(1))[0]
+        result[read_name(document)] = decode_element(element_type, document)
     return result
 
 
@@ -68,8 +69,9 @@ def decode_array(stream: io.BytesIO) -> list:
     document = io.BytesIO(stream.read(read_length(stream)))
     result = []
     while document.getbuffer().nbytes != 0:
+        element_type = struct.unpack("<b", document.read(1))[0]
         read_name(document)
-        result.append(decode_element(document))
+        result.append(decode_element(element_type, document))
     return result
 
 
