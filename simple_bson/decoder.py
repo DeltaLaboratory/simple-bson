@@ -26,9 +26,12 @@ def register(decode_type: collections.abc.Sequence) -> typing.Callable:
 def read_name(stream: io.BytesIO):
     buffer = bytearray()
     while True:
-        buffer.extend(stream.read(1))
+        stream_read = stream.read(1)
+        buffer.extend(stream_read)
         if buffer[-1] == 0:
             return buffer[0:-1].decode("utf-8")
+        if stream_read == b"":
+            raise DecodeError(f"Cannot Read Name : Buffer : {buffer}")
 
 
 def read_length(stream: io.BytesIO):
@@ -45,39 +48,56 @@ def decode_element(element_type: int, stream: io.BytesIO):
 def decode_root_document(document: bytes):
     if document[-1] != 0:
         raise DecodeError("Invalid Document : Bad EOD")
-    document = io.BytesIO(document[0:-1])
-    read_length(document)
+    document = io.BytesIO(document)
+    length = read_length(document)
     result = {}
-    while document.getbuffer().nbytes != 0:
+    while document.tell() != length:
         element_type = struct.unpack("<b", document.read(1))[0]
-        result[read_name(document)] = decode_element(element_type, document)
+        if element_type == 0:
+            return result
+        name = read_name(document)
+        result[name] = decode_element(element_type, document)
     return result
 
 
 @register((TypeSignature.document,))
 def decode_document(stream: io.BytesIO) -> dict:
-    document = io.BytesIO(stream.read(read_length(stream)))
+    length = read_length(stream)
+    document = io.BytesIO(stream.read(length - 4))
     result = {}
-    while document.getbuffer().nbytes != 0:
-        element_type = struct.unpack("<b", document.read(1))[0]
-        result[read_name(document)] = decode_element(element_type, document)
+    while document.tell() != length:
+        try:
+            element_type = struct.unpack("<b", document.read(1))[0]
+        except struct.error:
+            raise DecodeError("Invalid Document : Bad EOD")
+        if element_type == 0:
+            return result
+        name = read_name(document)
+        result[name] = decode_element(element_type, document)
     return result
 
 
 @register((TypeSignature.array,))
 def decode_array(stream: io.BytesIO) -> list:
-    document = io.BytesIO(stream.read(read_length(stream)))
+    length = read_length(stream)
+    document = io.BytesIO(stream.read(length - 4))
     result = []
-    while document.getbuffer().nbytes != 0:
-        element_type = struct.unpack("<b", document.read(1))[0]
-        read_name(document)
+    while document.tell() != length:
+        try:
+            element_type = struct.unpack("<b", document.read(1))[0]
+        except struct.error:
+            raise DecodeError("Invalid Document : Bad EOD")
+        if element_type == 0:
+            return result
         result.append(decode_element(element_type, document))
     return result
 
 
 @register((TypeSignature.string,))
 def decode_string(stream: io.BytesIO) -> str:
-    return stream.read(read_length(stream) - 1).decode("utf-8")
+    string = stream.read(read_length(stream) - 1).decode("utf-8")
+    stream.read(1)
+    return string
 
 
 @register((TypeSignature.bool,))
@@ -112,4 +132,4 @@ def decode_none(stream: io.BytesIO) -> None:
 
 @register((TypeSignature.binary,))
 def decode_binary(stream: io.BytesIO) -> bytes:
-    return stream.read(struct.unpack("<i", stream.read(5))[0])
+    return stream.read(struct.unpack("<ib", stream.read(5))[0])

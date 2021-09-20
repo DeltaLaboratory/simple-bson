@@ -1,7 +1,6 @@
-import pytest
+import bson
 
 import simple_bson
-import bson
 
 DATA = {
     "string": "Lorem Ipsum",
@@ -14,5 +13,9 @@ DATA = {
 }
 
 
-def test_main():
+def test_encode():
     assert simple_bson.dumps(DATA) == bson.BSON.encode(DATA)
+
+
+def test_decode():
+    assert simple_bson.loads(simple_bson.dumps(DATA)) == DATA

@@ -1,12 +1,15 @@
-import pytest
+import bson
 
 import simple_bson
-import bson
 
 DATA = {
     "bool": [True, False]
 }
 
 
-def test_bool():
+def test_encode():
     assert simple_bson.dumps(DATA) == bson.BSON.encode(DATA)
+
+
+def test_decode():
+    assert simple_bson.loads(simple_bson.dumps(DATA)) == DATA
