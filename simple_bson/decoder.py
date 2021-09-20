@@ -84,7 +84,7 @@ def decode_array(stream: io.BytesIO) -> list:
         element_type = struct.unpack("<b", document.read(1))[0]
         if element_type == 0:
             return result
-        name = read_name(document)
+        read_name(document)
         result.append(decode_element(element_type, document))
     return result
 
