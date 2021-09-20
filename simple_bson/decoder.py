@@ -31,7 +31,7 @@ def read_name(stream: io.BytesIO):
         if buffer[-1] == 0:
             return buffer[0:-1].decode("utf-8")
         if stream_read == b"":
-            raise DecodeError(f"Cannot Read Name : Buffer : {buffer}")
+            raise DecodeError(f"Cannot Read Name : Buffer : {buffer} : Bytes Left : {stream.read()}")
 
 
 def read_length(stream: io.BytesIO):
@@ -42,10 +42,11 @@ def decode_element(element_type: int, stream: io.BytesIO):
     try:
         return decoders[element_type](stream)
     except LookupError:
-        raise DecodeError(f"No decoder for : signature {element_type}")
+        raise DecodeError(f"No decoder for : signature {element_type}, bytes left : {stream.read()}")
 
 
 def decode_root_document(document: bytes):
+    print(document)
     if document[-1] != 0:
         raise DecodeError("Invalid Document : Bad EOD")
     document = io.BytesIO(document)
@@ -66,10 +67,7 @@ def decode_document(stream: io.BytesIO) -> dict:
     document = io.BytesIO(stream.read(length - 4))
     result = {}
     while document.tell() != length:
-        try:
-            element_type = struct.unpack("<b", document.read(1))[0]
-        except struct.error:
-            raise DecodeError("Invalid Document : Bad EOD")
+        element_type = struct.unpack("<b", document.read(1))[0]
         if element_type == 0:
             return result
         name = read_name(document)
@@ -83,12 +81,10 @@ def decode_array(stream: io.BytesIO) -> list:
     document = io.BytesIO(stream.read(length - 4))
     result = []
     while document.tell() != length:
-        try:
-            element_type = struct.unpack("<b", document.read(1))[0]
-        except struct.error:
-            raise DecodeError("Invalid Document : Bad EOD")
+        element_type = struct.unpack("<b", document.read(1))[0]
         if element_type == 0:
             return result
+        name = read_name(document)
         result.append(decode_element(element_type, document))
     return result
 
