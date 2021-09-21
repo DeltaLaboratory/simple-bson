@@ -46,47 +46,41 @@ def decode_element(element_type: int, stream: io.BytesIO):
 
 
 def decode_root_document(document: bytes):
-    print(document)
     if document[-1] != 0:
         raise DecodeError("Invalid Document : Bad EOD")
     document = io.BytesIO(document)
-    length = read_length(document)
+    read_length(document)
     result = {}
-    while document.tell() != length:
+    while True:
         element_type = struct.unpack("<b", document.read(1))[0]
         if element_type == 0:
             return result
         name = read_name(document)
         result[name] = decode_element(element_type, document)
-    return result
 
 
 @register((TypeSignature.document,))
 def decode_document(stream: io.BytesIO) -> dict:
-    length = read_length(stream)
-    document = io.BytesIO(stream.read(length - 4))
+    document = io.BytesIO(stream.read(read_length(stream) - 4))
     result = {}
-    while document.tell() != length:
+    while True:
         element_type = struct.unpack("<b", document.read(1))[0]
         if element_type == 0:
             return result
         name = read_name(document)
         result[name] = decode_element(element_type, document)
-    return result
 
 
 @register((TypeSignature.array,))
 def decode_array(stream: io.BytesIO) -> list:
-    length = read_length(stream)
-    document = io.BytesIO(stream.read(length - 4))
+    document = io.BytesIO(stream.read(read_length(stream) - 4))
     result = []
-    while document.tell() != length:
+    while True:
         element_type = struct.unpack("<b", document.read(1))[0]
         if element_type == 0:
             return result
         read_name(document)
         result.append(decode_element(element_type, document))
-    return result
 
 
 @register((TypeSignature.string,))
