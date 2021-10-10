@@ -34,7 +34,7 @@ def read_name(stream: io.BytesIO):
             raise DecodeError(f"Cannot Read Name : Buffer : {buffer} : Bytes Left : {stream.read()}")
 
 
-def read_length(stream: io.BytesIO):
+def read_length(stream: io.BytesIO) -> int:
     return struct.unpack("<i", stream.read(4))[0]
 
 
@@ -42,23 +42,13 @@ def decode_element(element_type: int, stream: io.BytesIO):
     try:
         return decoders[element_type](stream)
     except LookupError:
-        raise DecodeError(f"No decoder for : signature {element_type}, bytes left : {stream.read()}")
+        raise DecodeError(f"No decoder for : signature {element_type} :  Bytes Left : {stream.read()}")
 
 
 def decode_root_document(document: bytes):
-    print(document)
     if document[-1] != 0:
         raise DecodeError("Invalid Document : Bad EOD")
-    document = io.BytesIO(document)
-    length = read_length(document)
-    result = {}
-    while document.tell() != length:
-        element_type = struct.unpack("<b", document.read(1))[0]
-        if element_type == 0:
-            return result
-        name = read_name(document)
-        result[name] = decode_element(element_type, document)
-    return result
+    return decode_document(io.BytesIO(document))
 
 
 @register((TypeSignature.document,))
@@ -66,13 +56,12 @@ def decode_document(stream: io.BytesIO) -> dict:
     length = read_length(stream)
     document = io.BytesIO(stream.read(length - 4))
     result = {}
-    while document.tell() != length:
+    while True:
         element_type = struct.unpack("<b", document.read(1))[0]
         if element_type == 0:
             return result
         name = read_name(document)
         result[name] = decode_element(element_type, document)
-    return result
 
 
 @register((TypeSignature.array,))
@@ -80,13 +69,12 @@ def decode_array(stream: io.BytesIO) -> list:
     length = read_length(stream)
     document = io.BytesIO(stream.read(length - 4))
     result = []
-    while document.tell() != length:
+    while True:
         element_type = struct.unpack("<b", document.read(1))[0]
         if element_type == 0:
             return result
         read_name(document)
         result.append(decode_element(element_type, document))
-    return result
 
 
 @register((TypeSignature.string,))

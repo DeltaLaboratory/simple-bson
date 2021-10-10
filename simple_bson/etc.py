@@ -17,10 +17,3 @@ class EncodeError(Exception):
 
 class DecodeError(Exception):
     pass
-
-
-def get_data_and_view(data):
-    if isinstance(data, (bytes, bytearray)):
-        return data, memoryview(data)
-    view = memoryview(data)
-    return view.tobytes(), view
