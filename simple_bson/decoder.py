@@ -34,7 +34,7 @@ def read_name(stream: io.BytesIO):
             raise DecodeError(f"Cannot Read Name : Buffer : {buffer} : Bytes Left : {stream.read()}")
 
 
-def read_length(stream: io.BytesIO):
+def read_length(stream: io.BytesIO) -> int:
     return struct.unpack("<i", stream.read(4))[0]
 
 
