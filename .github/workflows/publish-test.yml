@@ -1,11 +1,11 @@
-name: publish package to main pypi
+name: publish package to test pypi
 on:
   push:
-    branches: [ stable ]
+    branches: [ stable, develop ]
 
 jobs:
   publish-package:
-    name: publish package to main pypi
+    name: publish package to test pypi
     runs-on: [ubuntu-latest]
     environment:
       name: pypi
@@ -32,4 +32,5 @@ jobs:
         uses: pypa/gh-action-pypi-publish@master
         with:
           user: __token__
-          password: ${{ secrets.API_TOKEN }}
+          password: ${{ secrets.TEST_API_TOKEN }}
+          repository_url: https://test.pypi.org/legacy/

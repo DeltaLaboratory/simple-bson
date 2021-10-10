@@ -1,7 +1,9 @@
 Simple-Bson
 ========================
 
-[![CI](https://github.com/DeltaLaboratory/simple-bson/actions/workflows/CI.yml/badge.svg)](https://github.com/DeltaLaboratory/simple-bson/actions/workflows/CI.yml)
+.. image:: https://github.com/DeltaLaboratory/simple-bson/actions/workflows/CI.yml/badge.svg?branch=stable
+    :target: https://github.com/DeltaLaboratory/simple-bson/actions/workflows/CI.yml?branch=stable
+    :alt: stable CI status
 
 Introduction
 ------------
