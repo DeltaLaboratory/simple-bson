@@ -46,8 +46,6 @@ def decode_element(element_type: int, stream: io.BytesIO):
 
 
 def decode_root_document(document: bytes):
-    if document[-1] != 0:
-        raise DecodeError("Invalid Document : Bad EOD")
     return decode_document(io.BytesIO(document))
 
 
