@@ -53,7 +53,7 @@ def encode_bool(name: str, value: bool) -> bytes:
     return TypeSignature.bool + encode_element_name(name) + struct.pack("<b", value)
 
 
-@register((None,))
+@register((type(None),))
 def encode_null(name: str, value: None) -> bytes:
     return TypeSignature.null + encode_element_name(name)
 
